@@ -13,11 +13,11 @@ Implementation of buffered I/O stream library in C
 
 
 ### Buffering modes
-| `STREAM_BUFFERED`         | Flush when buffer is full               
-| `STREAM_LINE_BUFFERED`    | Flush on `\n` or when buffer is full    
-| `STREAM_UNBUFFERED`       | Flush on every write                    
-
-
+| Mode | Behavior |
+|------|----------|
+| `STREAM_BUFFERED` | Flush when buffer is full |
+| `STREAM_LINE_BUFFERED` | Flush on `\n` or when buffer is full |
+| `STREAM_UNBUFFERED` | Flush on every write |
 
 
 ## Build
@@ -30,8 +30,8 @@ $ make clean
 ## Demo
 ```bash
 ./demo                          # writes and reads back "Hello Gihub"
-./demo-full                     # full demo with "Hello Github" default text
-./demo-full $'Your own text\n'  # full demo with "Hello Github" default text
+./demo-full                     # full demo with "Hello GitHub" default text
+./demo-full $'Your own text\n'  # full demo with custom text
 ```
 
 
