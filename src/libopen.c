@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "libstream.h"
 int modegestion(const char *mode)
@@ -37,22 +38,31 @@ struct stream *lbs_fdopen(int fd, const char *mode)
     struct stream *res = malloc(sizeof(struct stream));
     if (res == NULL || mode == NULL)
         return NULL;
+    
     int flagss = modegestion(mode);
     if (flagss == -1)
     {
         free(res);
         return NULL;
     }
-    size_t alreadyread = 0;
-    size_t bufferedsize = 0;
-    // char *buf=malloc(LBS_BUFFER_SIZE);
-    enum stream_io_operation siop = STREAM_READING;
+
+    int tty= isatty(fd);
+    if (tty ==0 && errno==EBADF)
+    { 
+        free(res);
+        return NULL;
+    }
+
     enum stream_buffering sbm;
-    if (isatty(fd) == 1)
+    if (tty==1)
         sbm = STREAM_LINE_BUFFERED;
     else
         sbm = STREAM_BUFFERED;
-
+    
+    size_t alreadyread = 0;
+    size_t bufferedsize = 0;
+    enum stream_io_operation siop = STREAM_READING;
+    
     res->flags = flagss;
     res->fd = fd;
     res->error = 0;
@@ -60,7 +70,6 @@ struct stream *lbs_fdopen(int fd, const char *mode)
     res->buffering_mode = sbm;
     res->already_read = alreadyread;
     res->buffered_size = bufferedsize;
-    // TODO res->buffer=malloc(LBS_BUFFER_SIZE);
 
     return res;
 }

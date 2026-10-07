@@ -1,24 +1,19 @@
 CC = gcc
 CFLAGS = -std=c99 -pedantic -Werror -Wall -Wextra -Wvla -Iinclude
-SOURCES = minicat.c src/libopen.c src/libciao.c src/libget.c
-OBJETS = src/libopen.o src/libciao.o src/libget.o
-TARGET = minicat
+SRCES = src/libopen.c src/libclose.c src/libget.c
+OBJECTS = $(SRCES:.c=.o)
 
 
-minicat: $(TARGET)
+all: libstream.a demo demo-full
 
-$(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) -o $@ $^
+libstream.a: $(OBJECTS)
+	ar csr $@ $^
 
-#test: $(SOURCES) src/main.c
-#	$(CC) $(CFLAGS) -o -L. -llibstream.a $@ $^
+demo-full: fullmain.c libstream.a
+	$(CC) $(CFLAGS) -o $@ $< -L. -lstream
 
-library: $(OBJETS)
-	ar csr libstream.a $(OBJETS)
-
-#minicat: minicat.c
-#	$(CC) $(CFLAGS) -o $@ $^
+demo: main.c libstream.a
+	$(CC) $(CFLAGS) -o $@ $< -L. -lstream
 
 clean:
-	rm -f $(TARGET)
-	rm -rf $(OBJETS)
+	rm -f $(OBJECTS) libstream.a demo demo-full demo-full.txt demo.txt

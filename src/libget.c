@@ -9,6 +9,14 @@
 
 int lbs_fputc(int c, struct stream *stream)
 {
+    //pas les perm pour ecrire
+    if (stream_writable(stream) ==false)
+    {
+        stream->error=1;
+        return LBS_EOF;
+    }
+
+
     // convert depuis val ascii
     char ch = c;
     // pas bonne ope
@@ -21,6 +29,7 @@ int lbs_fputc(int c, struct stream *stream)
             return -1;
         }
         stream->io_operation = STREAM_WRITING;
+        stream->buffered_size=0;
     }
 
     // buff big back plein :^]
@@ -70,50 +79,54 @@ int lbs_fputc(int c, struct stream *stream)
 */
 int lbs_fgetc(struct stream *stream)
 {
-    int tmp = 0;
+	if (!stream_readable(stream))
+	{
+		stream->error=1;
+		return LBS_EOF;
+	}
+    
     if (stream->io_operation == STREAM_WRITING)
     {
         int tmp = lbs_fflush(stream);
         if (tmp != 0)
         {
             stream->error = 1;
-            return EOF;
+            return LBS_EOF;
         }
         stream->io_operation = STREAM_READING;
         stream->buffered_size = 0;
     }
 
-    if (stream_unused_buffer_space(stream) == LBS_BUFFER_SIZE)
+    if (stream_remaining_buffered(stream) == 0)
     {
         int total = 0;
         while (total < LBS_BUFFER_SIZE)
         {
-            tmp += read(stream->fd, stream->buffer + total,
+            ssize_t n= read(stream->fd, stream->buffer + total,
                         LBS_BUFFER_SIZE - total);
-            if (tmp < 0)
+            if (n < 0)
             {
                 stream->error = 1;
-                return EOF;
+                return LBS_EOF;
             }
-            if (tmp == 0)
+            if (n == 0)
                 break;
-            total += tmp;
+            total += n;
         }
         stream->buffered_size = total;
         stream->already_read = 0;
+        if (total==0)
+            return LBS_EOF;
     }
-    int res = stream->buffer[stream->already_read];
+    unsigned char c;
+    memcpy(&c,stream->buffer + stream->already_read,1);
+    int res=c;
     stream->already_read++;
     return res;
 }
 
 int lbs_fseek(struct stream *stream, long offset, int whence)
 {
-    /*
-    if (stream->io_operation == STREAM_READING)
-    {
-
-    }*/
 
     if (lbs_fflush(stream) == EOF)
     {
@@ -142,17 +155,12 @@ int lbs_fseek(struct stream *stream, long offset, int whence)
 */
 long lbs_ftell(struct stream *stream)
 {
-    off_t pos = lseek(stream->fd, 0, SEEK_CUR);
+    off_t pos = lseek(stream->fd, 0, stream_positioning(stream));
     if (pos == -1)
     {
         stream->error = 1;
         return -1;
     }
-    /*
-        if (stream->flags==O_APPEND)
-        {
-
-        }*/
     if (stream->io_operation == STREAM_READING)
     {
         pos -= (stream->buffered_size) - (stream->already_read);
