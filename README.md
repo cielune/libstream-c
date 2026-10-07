@@ -13,9 +13,9 @@ Implementation of buffered I/O stream library in C
 
 
 ### Buffering modes
-`STREAM_BUFFERED`           | Flush when buffer is full
-`STREAM_LINE_BUFFERED`      | Flush on `\n` or when buffer is full
-`STREAM_UNBUFFERED`         | Flush on every write
+| `STREAM_BUFFERED`         | Flush when buffer is full             |
+| `STREAM_LINE_BUFFERED`    | Flush on `\n` or when buffer is full  |
+| `STREAM_UNBUFFERED`       | Flush on every write                  |
 
 
 
